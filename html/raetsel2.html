@@ -1,0 +1,244 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#1a1a1a;font-family:Arial,sans-serif}
+#app{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem;gap:1.5rem;user-select:none}
+h1{font-size:18px;font-weight:500;color:#e8e8e8;letter-spacing:.05em}
+#safe-wrap{position:relative;width:260px;height:260px}
+#dial-svg{width:100%;height:100%;cursor:grab;touch-action:none}
+#dial-svg:active{cursor:grabbing}
+#slots{display:flex;gap:12px}
+.slot{width:56px;height:44px;border:1px solid #444;border-radius:8px;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;color:#e8e8e8;transition:background .3s,border-color .3s}
+.slot.filled{background:#1a3a2a;border-color:#3a8a5a;color:#6ecf94}
+#status{font-size:14px;color:#888;min-height:20px;transition:color .3s}
+#status.ok{color:#6ecf94}
+#status.err{color:#e24b4a}
+#hint{font-size:12px;color:#555}
+#reset-btn{font-size:13px;padding:6px 16px;cursor:pointer;background:transparent;border:1px solid #444;border-radius:8px;color:#aaa;opacity:0;transition:opacity .3s}
+#reset-btn.visible{opacity:1}
+#reset-btn:hover{background:#2a2a2a}
+</style>
+
+<div id="app">
+<h1>Ändermenü öffnen</h1>
+
+<div id="safe-wrap">
+<svg id="dial-svg" viewBox="0 0 260 260">
+  <circle cx="130" cy="130" r="120" fill="#2a2a2a" stroke="#555" stroke-width="1.5"/>
+  <circle cx="130" cy="130" r="118" fill="#222" opacity="0.4"/>
+  <g id="marks-group" transform="translate(130,130)"></g>
+  <circle cx="130" cy="130" r="22" fill="#1a1a1a" stroke="#555" stroke-width="1.5"/>
+  <circle cx="130" cy="130" r="6" fill="#666"/>
+  <rect x="128" y="13" width="4" height="18" rx="2" fill="#e24b4a"/>
+</svg>
+</div>
+
+<div id="slots">
+  <div class="slot" id="s0"></div>
+  <div class="slot" id="s1"></div>
+  <div class="slot" id="s2"></div>
+</div>
+
+<p id="status">Drehe das Schloss</p>
+<p id="hint">Schritt 1 von 3 — finde die richtige Position</p>
+<button id="reset-btn">Fortfahren</button>
+</div>
+
+<script>
+let combo = [];
+const tol = 3;
+
+const directions = [1, -1, 1];
+
+function generateCombo(){
+  combo = [
+    Math.floor(Math.random()*100),
+    Math.floor(Math.random()*100),
+    Math.floor(Math.random()*100)
+  ];
+}
+
+generateCombo();
+
+let rotation=0,dragging=false,lastAngle=null,step=0,lastTick=-1;
+
+const svg=document.getElementById('dial-svg');
+const statusEl=document.getElementById('status');
+const hintEl=document.getElementById('hint');
+const resetBtn=document.getElementById('reset-btn');
+const mg=document.getElementById('marks-group');
+
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+
+function distToTarget(cur){
+  const t=combo[step];
+  return Math.min(Math.abs(cur-t),100-Math.abs(cur-t));
+}
+
+function tickClick(dist){
+  const freq=400+(1-Math.min(dist,20)/20)*1400;
+  const vol=0.08+(1-Math.min(dist,20)/20)*0.28;
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type='square';o.frequency.value=freq;g.gain.value=vol;
+  const f=AC.createBiquadFilter();
+  f.type='bandpass';f.frequency.value=freq*1.2;f.Q.value=1.5;
+  o.connect(f);f.connect(g);g.connect(AC.destination);
+  o.start();g.gain.setTargetAtTime(0,AC.currentTime,.018);
+  o.stop(AC.currentTime+.06);
+}
+
+function successClick(){
+  [1100,1400,1800].forEach((f,i)=>{
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type='sine';o.frequency.value=f;g.gain.value=.22;
+    o.connect(g);g.connect(AC.destination);
+    o.start(AC.currentTime+i*.07);
+    g.gain.setTargetAtTime(0,AC.currentTime+i*.07+.02,.04);
+    o.stop(AC.currentTime+i*.07+.18);
+  });
+}
+
+function errorClick(){
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type='sawtooth';o.frequency.value=180;g.gain.value=.2;
+  o.connect(g);g.connect(AC.destination);
+  o.start();g.gain.setTargetAtTime(0,AC.currentTime,.1);
+  o.stop(AC.currentTime+.25);
+}
+
+function resetAll(){
+  for(let i=0;i<3;i++){
+    const s=document.getElementById('s'+i);
+    s.textContent='';
+    s.classList.remove('filled');
+  }
+  generateCombo();
+  step=0;
+  statusEl.textContent='✗ Falsche Richtung';
+  statusEl.className='err';
+  hintEl.textContent='Schritt 1 von 3 — von vorne beginnen';
+  setTimeout(()=>{
+    statusEl.textContent='Drehe das Schloss';
+    statusEl.className='';
+  },1200);
+}
+
+for(let i=0;i<100;i++){
+  const ang=(i*3.6-90)*Math.PI/180;
+  const isMajor=i%5===0;
+  const r=isMajor?96:104;
+  const len=isMajor?14:8;
+  const x1=Math.cos(ang)*r,y1=Math.sin(ang)*r;
+  const x2=Math.cos(ang)*(r+len),y2=Math.sin(ang)*(r+len);
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',x1);line.setAttribute('y1',y1);
+  line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+  line.setAttribute('stroke',isMajor?'#777':'#444');
+  line.setAttribute('stroke-width',isMajor?'1.5':'1');
+  mg.appendChild(line);
+  if(i%10===0){
+    const tx=Math.cos(ang)*81,ty=Math.sin(ang)*81;
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',tx);t.setAttribute('y',ty);
+    t.setAttribute('text-anchor','middle');
+    t.setAttribute('dominant-baseline','central');
+    t.setAttribute('font-size','9');
+    t.setAttribute('fill','#666');
+    t.setAttribute('font-family','Arial,sans-serif');
+    t.textContent=i;
+    mg.appendChild(t);
+  }
+}
+
+function getAngle(cx,cy,ex,ey){return Math.atan2(ey-cy,ex-cx)*(180/Math.PI)}
+function getCenter(){const r=svg.getBoundingClientRect();return[r.left+r.width/2,r.top+r.height/2]}
+function getPos(e){if(e.touches)return[e.touches[0].clientX,e.touches[0].clientY];return[e.clientX,e.clientY]}
+function getCur(){return((Math.round(rotation/3.6)%100)+100)%100}
+
+function onStart(e){
+  e.preventDefault();
+  AC.resume();
+  dragging=true;
+  const[px,py]=getPos(e);
+  const[cx,cy]=getCenter();
+  lastAngle=getAngle(cx,cy,px,py);
+  lastTick=getCur();
+}
+
+function onMove(e){
+  if(!dragging)return;
+  e.preventDefault();
+
+  const[px,py]=getPos(e);
+  const[cx,cy]=getCenter();
+  const a=getAngle(cx,cy,px,py);
+
+  let da=a-lastAngle;
+  if(da>180)da-=360;
+  if(da<-180)da+=360;
+
+  const dir = directions[step];
+
+  if((da > 0 && dir === -1) || (da < 0 && dir === 1)){
+    errorClick();
+    resetAll();
+    return;
+  }
+
+  rotation+=da;
+  lastAngle=a;
+
+  mg.setAttribute('transform',`translate(130,130) rotate(${rotation})`);
+
+  const cur=getCur();
+  if(cur!==lastTick){
+    tickClick(distToTarget(cur));
+    lastTick=cur;
+  }
+}
+
+function onEnd(){
+  if(!dragging)return;
+  dragging=false;
+
+  const cur=getCur();
+  const dist=distToTarget(cur);
+
+  if(dist<=tol){
+    successClick();
+    const sl=document.getElementById('s'+step);
+    sl.textContent=combo[step];
+    sl.classList.add('filled');
+    step++;
+
+    if(step===combo.length){
+      statusEl.textContent='Ändermenü öffnen';
+      statusEl.className='ok';
+      hintEl.textContent='Eingabe wurde nicht Abgelent';
+      resetBtn.classList.add('visible');
+    }else{
+      statusEl.textContent='✔ Korrekt!';
+      statusEl.className='ok';
+      hintEl.textContent=`Schritt ${step+1} von 3 — finde die nächste Position`;
+      setTimeout(()=>{
+        statusEl.textContent='Weiter drehen';
+        statusEl.className='';
+      },1000);
+    }
+  }else{
+    errorClick();
+    resetAll();
+  }
+}
+
+svg.addEventListener('mousedown',onStart);
+svg.addEventListener('touchstart',onStart,{passive:false});
+document.addEventListener('mousemove',onMove);
+document.addEventListener('touchmove',onMove,{passive:false});
+document.addEventListener('mouseup',onEnd);
+document.addEventListener('touchend',onEnd);
+
+resetBtn.addEventListener('click',()=>{
+  // WEG MIT DIR
+  window.location.href = "raetsel3.html";
+});
+</script>

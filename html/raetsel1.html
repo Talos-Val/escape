@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../css/style.css">
+<title>Rätsel</title>
+</head>
+<body id="raetsel1">
+<div id="WoeRt">
+<img src="../bilder/raetsel1/WoeRt-Datei.png" alt="WoeRt">
+</div>
+<div id="Anmeldefenster">
+<img src="../bilder/raetsel1/Anmeldefenster.png" alt="Anmeldefenster">
+</div>
+<div id="WoeRt">
+    <img src="../bilder/raetsel1/WoeRt-Datei.png" alt="Wort Datei">
+</div>
+
+<div id="Anmeldefenster">
+    <img src="../bilder/raetsel1/Anmeldefenster.png" alt="Anmeldefenster">
+</div>
+
+<form id="pruefFormular">
+    <input type="text" id="feld1" required autocomplete="off" placeholder="Benutzername">
+    <input type="password" id="feld2" required placeholder="Passwort">
+    <button type="submit" id="loginButton">Anmelden</button>
+</form>
+
+<p id="fehlerMeldung">Falsche Zugangsdaten!</p>
+
+<div id="captchaModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>„I´m not a Voll autonome Arbeitseinheit but I´m a Voll autonome Arbeitseinheit“-Rätsel</h3>
+        <p>Bitte gib die unten stehende Zeichenfolge ein:</p>
+        <div class="captcha-code" id="captchaText" oncopy="return false" oncontextmenu="return false">
+            <span>j</span><span>8</span><span>5</span><span>F</span><span>0</span><span>J</span>
+        </div>
+        <input type="text" id="captchaEingabe" placeholder="Code hier eingeben" autocomplete="off">
+        <button type="button" id="captchaButton">Bestätigen</button>
+        <p id="captchaFehler" style="color: red; display: none; margin-top: 10px;">Falscher Code! Versuche es erneut.</p>
+    </div>
+</div>
+
+<script>
+    document.getElementById('pruefFormular').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const eingabe1 = document.getElementById('feld1').value;
+      const eingabe2 = document.getElementById('feld2').value;
+      const fehlerAnzeige = document.getElementById('fehlerMeldung');
+
+      const richtigesWort1 = "SIEGFRIED_DREIST_M84";
+      const richtigesWort2 = "P@55vv0rt!";
+
+      if (eingabe1 === richtigesWort1 && eingabe2 === richtigesWort2) {
+          fehlerAnzeige.style.display = "none"; 
+          document.getElementById('captchaModal').style.display = "flex";
+      } else {
+          fehlerAnzeige.style.display = "block";
+      }
+    });
+
+    document.getElementById('captchaButton').addEventListener('click', function() {
+        const captchaEingabe = document.getElementById('captchaEingabe').value;
+        const korrekterCode = document.getElementById('captchaText').textContent.trim();
+        const captchaFehler = document.getElementById('captchaFehler');
+
+        if (captchaEingabe === korrekterCode) {
+            window.location.href = "raetsel2.html";
+        } else {
+            captchaFehler.style.display = "block";
+        }
+    });
+</script>
+
+<div id="Anmeldedaten">
+To-Do: Gartenzaun (4 Bretter) kaufen;
+Modellnummer: SIE8IRERIM4EFDDS_G_T;
+Python lernen: nächste Lektion: # HINWEIS: Überprüfe die Protokoll-Parameter!
+def check_system_access():
+    Param_P = "Protokoll"
+    Auth_at = "@"
+    Status_55 = "Aktiv"
+    Version_vv = "2.0"
+    Zero_0 = "Nullen"
+    Return_r = "Reset"
+    Time_t = "Timeout"
+    Impact_excl = "!"
+    
+</div>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Rätsel</title>
+</head>
+<body id="raetsel3">
+
+    <button onclick="oeffneFenster()" class="start-btn" style="margin: 20px;" id="starten">
+        Dev-Menü
+    </button>
+
+    <div id="meinRaetselFenster" class="modal-hintergrund">
+        <div class="modal-inhalt">
+            <h3 style="margin: 0 0 5px 0;">„I´m a Vollautonome Arbeitseinheit“</h3>
+            <p style="margin: 0 0 15px 0; color: #fff;">Tippe alle Hydranten an!</p>
+            
+            <div class="captcha-grid">
+                <img src="../bilder/captcha/hydrant.png" class="captcha-item" onclick="waehleBild(this, true)">
+                <img src="../bilder/captcha/falsch1.png" class="captcha-item" onclick="waehleBild(this, false)">
+                <img src="../bilder/captcha/hydrant.png" class="captcha-item" onclick="waehleBild(this, true)">
+                
+                <img src="../bilder/captcha/falsch2.png" class="captcha-item" onclick="waehleBild(this, false)">
+                <img src="../bilder/captcha/hydrant.png" class="captcha-item" onclick="waehleBild(this, true)">
+                <img src="../bilder/captcha/falsch3.png" class="captcha-item" onclick="waehleBild(this, false)">
+                
+                <img src="../bilder/captcha/falsch4.png" class="captcha-item" onclick="waehleBild(this, false)">
+                <img src="../bilder/captcha/falsch5.png" class="captcha-item" onclick="waehleBild(this, false)">
+                <img src="../bilder/captcha/hydrant.png" class="captcha-item" onclick="waehleBild(this, true)">
+            </div>
+
+            <button class="bestaetigen-btn" onclick="pruefeRaetsel()">Bestätigen</button>
+        </div>
+    </div>
+
+    <script>
+        // Öffnet das Fenster
+        function oeffneFenster() {
+            document.getElementById("meinRaetselFenster").style.display = "block";
+        }
+
+        // Markiert ein Bild als ausgewählt oder wählt es ab
+        function waehleBild(element, istHydrant) {
+            element.classList.toggle("ausgewaehlt");
+            // Wir speichern uns unsichtbar am Bild ab, ob es ein Hydrant ist
+            element.dataset.richtig = istHydrant; 
+        }
+
+        // Überprüft, ob die Lösung korrekt ist
+        function pruefeRaetsel() {
+            const alleBilder = document.querySelectorAll(".captcha-item");
+            let allesRichtig = true;
+
+            alleBilder.forEach(bild => {
+                const wurdeAusgewaehlt = bild.classList.contains("ausgewaehlt");
+                const istTatsaechlichHydrant = (bild.dataset.richtig === "true");
+
+                // Fehler 1: Ein Hydrant wurde NICHT ausgewählt
+                if (istTatsaechlichHydrant && !wurdeAusgewaehlt) {
+                    allesRichtig = false;
+                }
+                // Fehler 2: Ein falsches Bild WURDE ausgewählt
+                if (!istTatsaechlichHydrant && wurdeAusgewaehlt) {
+                    allesRichtig = false;
+                }
+            });
+
+            if (allesRichtig) {
+                // Erfolg: Weiterleitung zu raetsel4.html
+                window.location.href = "raetsel4.html";
+            } else {
+                // Fehler: Kurzes Feedback und Zurücksetzen
+                alert("Fehler! Du bist wohl doch kein Roboter. Versuche es nochmal!");
+                alleBilder.forEach(bild => bild.classList.remove("ausgewaehlt"));
+            }
+        }
+    </script>
+
+</body>
+</html>
