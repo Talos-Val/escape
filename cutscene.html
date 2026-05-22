@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../css/style.css">
+<title>Cutscene</title>
+</head>
+<body id="raum2">
+<audio id="Platzhalter" autoplay>
+  <source src="../audio/cutscene1/Cutscene1.ogg" type="audio/ogg">
+  <source src="../audio/cutscene1/Cutscene1.mp3" type="audio/mpeg">
+  Ihr Browser unterstützt das Audio-Element nicht.
+</audio>
+<a href="raetsel1.html">
+    <button id="weiterbutton" style="display: none;">
+        <img src="../bilder/buttons/Weiterbutton.png" alt="Weiterbutton">
+    </button>
+</a>
+<script>
+  const audio = document.getElementById("Platzhalter");
+  const button = document.getElementById("weiterbutton");
+  //Audioende
+  audio.onended = function() {
+    button.style.display = "block"; 
+  };
+</script>
+</body>
+</html>
